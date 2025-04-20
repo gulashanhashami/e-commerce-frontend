@@ -1,0 +1,6 @@
+const types = {
+    FETCH_PRODUCT_DATA_SUCCESS: "FETCH_PRODUCT_DATA_SUCCESS",
+    GET_DATA_LOADING: "GET_DATA_LOADING",
+};
+
+export default types;
