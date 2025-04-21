@@ -15,7 +15,7 @@ Clone this Project
 
 `git pull https://github.com/gulashanhashami/e-commerce-frontend.git`
 
-# npm run install
+# npm install
 # npm run start
 - Now the project is ready just go and visit home page
 
