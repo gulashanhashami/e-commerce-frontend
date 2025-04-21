@@ -1,10 +1,11 @@
-import logo from './logo.svg';
-import './App.css';
+import { Navbar } from './components/navbar/Navbar';
+import ProductPage from './components/ProductPage';
 
 function App() {
   return (
     <div className="App">
-      <h1>React app</h1>
+      <Navbar />
+      <ProductPage />
     </div>
   );
 }
