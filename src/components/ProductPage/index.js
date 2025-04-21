@@ -9,13 +9,203 @@ import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
 import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace';
 import EastIcon from '@mui/icons-material/East';
 import { ProductDropdown } from "../elements/dropdowns/ProductDropdown";
+import { SideFilter } from "../filters/SideFilters";
+import SpinLoader from "../elements/loading/SpinLoader";
+import EmptyPage from "../elements/emptyDataUI/EmptyPage";
 
-const Stylediv=styled.div`
+const ProductPage = (props) => {
+  const [page, setPage] = useState(1);
+  const [tpage, setTpage] = useState(0);
+  const [filters, seFilters] = useState({});
+  const [results, setResults] = useState();
+  const [loading, setLoading] = useState(false);
+  const [wishlisted, setWishlisted] = useState(false);
+
+
+  const { fetchProductDataList } = useSelector((store) => store);
+  const { data } = fetchProductDataList;
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    console.log("pageghh", filters, "fgh", page)
+    fetchProductDataRequest({ ...filters, page: page });
+  }, [page, filters])
+
+  const fetchProductDataRequest = (params) => {
+    setLoading(true);
+    axios.get(`http://localhost:9000/api/product/list`, { params }).then(({ data }) => {
+
+      dispatch(getProductDataSuccess(data.products));
+      setTpage(data.totalPages);
+      setResults(data.totalProducts);
+      setLoading(false);
+    }).catch((error) => {
+      setLoading(false);
+    })
+  };
+
+  const handleSortChange = (sortValue) => {
+    seFilters({ ...filters, sortBy: sortValue });
+  };
+
+  const handlecategoryFilter = (catValues, priceRange) => {
+    const [minSetPrice, maxSetPrice] = priceRange;
+    seFilters({ ...filters, category: catValues.join(','), minPrice: minSetPrice, maxPrice: maxSetPrice });
+  };
+
+  const handleAddToCart = (item) => {
+    const payload = {
+      title: item.title,
+      price: item.price,
+      category: item.category,
+      image: item.image,
+      rating: item.rating,
+      productId: item._id
+    }
+
+    axios.post(`http://localhost:9000/api/cart/create`, payload).then(({ data }) => {
+
+      alert(`Added successfully`);
+    }).catch((err) => {
+      console.log("err: ", err);
+      alert(`${err.response.data.message}`);
+    })
+  }
+
+  return (
+    <Stylediv>
+
+      <div className="productBox">
+        <div className="leftsort">
+          <SideFilter handlecategoryFilter={handlecategoryFilter} />
+        </div>
+        <div style={{ width: "77%" }}>
+          <div id="topn1">
+            <div id="topn12">
+              <p>{(results === 0) ? "There is no data" : `Showing ${(page - 1) * 10 + 1} to ${results > page * 10 ? page * 10 : results} of ${results} results`}</p>
+            </div>
+            <div id="topn13">
+
+              <ProductDropdown onSortChange={handleSortChange} />
+            </div>
+          </div>
+          {/* Loader */}
+          {(loading || data.data === undefined) ? (
+            <SpinLoader />
+          ) : (
+            <div>
+              {(data.data.length === 0 || data.data === undefined) ? (
+                <EmptyPage fetchProductDataRequest={fetchProductDataRequest} />
+              ) : (
+                <div className="box1">
+                  {/**data mapping**/}
+                  {data.data.length && data?.data.map((item) => {
+                    return (
+                      <div key={item._id} className="card">
+                        <img className="img1" srcSet={item.image} alt="" />
+                        <div className="wishList">
+                          <FavoriteRoundedIcon style={{ position: "relative", color: `${wishlisted ? "red" : "#557D2F"}` }} />
+                        </div>
+                        <div className="cardText">
+                          <p>{item.title}</p>
+                          <div className="rating">
+                            <StarRateIcon style={{ color: 'gold', fontSize: "18px" }} />
+                            <p>{item.rating}</p>
+                          </div>
+
+                          <p className="usPrice">{item.price} USD</p>
+                        </div>
+
+                        <p className="category">{item.category}</p>
+                        <button className="btn1" onClick={() => {
+
+                          var result = window.confirm("Are you sure, want to add it to cart?");
+                          if (result) {
+                            handleAddToCart(item);
+                          }
+                        }}>Add To Cart
+                          <LocalMallIcon style={{ fontSize: "15px" }} />
+                        </button>
+                        {/* </div> */}
+                      </div>
+                    )
+                  })}
+
+                </div>
+              )}
+
+            </div>
+          )}
+
+        </div>
+      </div>
+      <br />
+
+      <div className="pagination">
+        <div className="paginationButtonPrevious" style={{ color: (page === 1) ? '#DEE1E1' : "" }} onClick={() => {
+          if (page > 1)
+            setPage(page - 1);
+
+        }}>
+          <KeyboardBackspaceIcon />
+        </div>
+        <div className="pageNumber" style={{ color: (page === 1) ? 'white' : "", backgroundColor: (page === 1) ? '#557D2F' : "" }} onClick={() => {
+          setPage(1)
+        }}>1</div>
+        <div className="pageNumber" style={{ color: (page === 2) ? 'white' : "", backgroundColor: (page === 2) ? '#557D2F' : "", pointerEvents: (2 > tpage) && 'none' }} onClick={() => {
+
+          setPage(2);
+
+        }}>2</div>
+        <div className="pageNumber" style={{ color: (page === 3) ? 'white' : "", backgroundColor: (page === 3) ? '#557D2F' : "", pointerEvents: (3 > tpage) && 'none' }} onClick={() => {
+          setPage(3);
+
+        }}>3</div>
+        <div className="pageNumber" style={{ color: (page === 4) ? 'white' : "", backgroundColor: (page === 4) ? '#557D2F' : "", pointerEvents: (4 > tpage) && 'none' }} onClick={() => {
+          setPage(4);
+
+        }}>4</div>
+        <div className="pageNumber" style={{ color: (page === 5) ? 'white' : "", backgroundColor: (page === 5) ? '#557D2F' : "", pointerEvents: (5 > tpage) && 'none' }} onClick={() => {
+          setPage(5);
+
+        }}>5</div>
+        <div className="pageNumber" style={{ color: (page === 6) ? 'white' : "", backgroundColor: (page === 6) ? '#557D2F' : "", pointerEvents: (6 > tpage) && 'none' }} onClick={() => {
+          setPage(6);
+
+        }}>6</div>
+        <div className="pageNumber" style={{ color: (page === 7) ? 'white' : "", backgroundColor: (page === 7) ? '#557D2F' : "", pointerEvents: (7 > tpage) && 'none' }} onClick={() => {
+          setPage(7);
+
+        }}>7</div>
+        <div className="pageNumber" style={{ color: (page === 8) ? 'white' : "", backgroundColor: (page === 8) ? '#557D2F' : "", pointerEvents: (8 > tpage) && 'none' }} onClick={() => {
+          setPage(8);
+
+        }}>8</div>
+
+        <div className="paginationButtonNext" style={{ color: (page >= tpage) ? '#DEE1E1' : "", pointerEvents: (page >= tpage) && 'none' }} onClick={() => {
+
+          setPage(page + 1);
+
+        }}>
+          <EastIcon />
+        </div>
+      </div>
+      <br />
+      <br />
+    </Stylediv>
+  )
+}
+
+export default ProductPage;
+
+const Stylediv = styled.div`
     font-family: sans-serif;
 
     #topn1{
         width: 100%;
-        height: 5vh;
+        height: 7vh;
+        float: right;
         @media (max-width:415px){
           height:3vh;
           margin-top:1.5%;
@@ -26,11 +216,10 @@ const Stylediv=styled.div`
         justify-content: space-between;
         align-items: center;
         background-color:rgba(249, 249, 249, 255) ;
-        // background-color: grey; 
         
       }
       #topn12{
-        margin-left: 7%;
+        margin-left: 1%;
         width: 36%;
         font-size: 1.2vw;
         @media (max-width:415px){
@@ -43,29 +232,20 @@ const Stylediv=styled.div`
         color: black;
         justify-content: space-between;
         align-items: center;
-        //  border: 1px solid red; 
       }
       #topn13{
-        margin-right: 5%;
-        width: 16%;
         @media (max-width:415px){
           margin-right: 0%;
           width: 35%;
         }
         height: 5vh;
-        // color: black;
-        // display: flex;
-        // justify-content: space-between;
         align-items: center;
-      //  border: 1px solid red; 
       }
 
     .productBox {
-        width:85%;
-        border: 1px solid blue;
+        width:87%;
     display: flex;
     flex-direction: row;
-    align-items: center;
     margin: auto;
     }
     
@@ -106,12 +286,6 @@ const Stylediv=styled.div`
        flex-direction: row;
     width: 45%;
        height: 4.3vh; 
-       /* border: 2px solid red; */
-   }
-   .in{
-       width: 88%;
-       height: 3.5vh;
-       outline: none;
    }
    #btn{
        width: 10%;
@@ -127,8 +301,7 @@ const Stylediv=styled.div`
    }
 
 .box1{
-    border:1px solid red;
-    width:78%;
+    width:100%;
     height:90vh;
     display: grid;
     justify-items:center;
@@ -139,15 +312,9 @@ const Stylediv=styled.div`
         grid-gap: 2%; 
     }
     grid-gap: 2%;
-    // padding-left: 5%;
     overflow-y: scroll;
     margin: auto;
-    margin-top: 3vh;
     border-bottom: .1vw solid grey;
-}
-a{
-    text-decoration: none;
-    color: grey;
 }
 p{
     font-size: 1vw;
@@ -170,7 +337,6 @@ p{
    justify-content: space-between;
     padding-bottom: 5%;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-    // border: 1px solid red; 
 }
 .img1{
     width: 100%;
@@ -178,25 +344,6 @@ p{
     @media (max-width:415px){
         height: 80%;
     }
-}
-#btndiv1{
-    border: 1px solid red; 
-    // width: 93%;
-    // height: 7%;
-    margin: auto;
-    @media (max-width:415px){
-        width: 100%;
-        height:10%;
-        margin-left:0%;
-    }
-    // vertical-align:bottom;
-    // margin-top: 10% ;
-    // display: flex;
-    // margin-left:4%;
-    // flex-direction: row;
-    align-items: center;
-    // justify-content: space-between;
-    //  border: 1px solid red; 
 }
 .btn1{
     display: flex;
@@ -217,10 +364,6 @@ p{
     border-radius: .5vw;
     border: none;
 }
-// .btn1:hover{
-//    background-color: white;
-//    color: red;
-// }
 
 .tit{
     margin-left:4%;
@@ -234,35 +377,12 @@ p{
     line-height:0vh;
 }
 .leftsort{
-    border: 1px solid red;
-    width:20%;
+    width:23%;
     @media (max-width:415px){
         width:17%;
     }
-    margin-top: 3vh;
-    height:90vh;
-    // float:left;
-    // display:flex;
-    // flex-direction: column;
-    // align-items: center;
-    // border-right: .1vw solid grey;
-    // margin: auto;
+    height:95vh;
 }
-.sortbyprice{
-    height:5%;
-    cursor: pointer;
-    @media (max-width:415px){
-        height:3%;
-        font-size: 3.6vw;
-        border-radius:.5vw;
-    }
-    margin-top:6%;
-    color:white;
-    font-size: 1.2vw;
-    background-color: teal;
-    border-radius:.3vw;
-}
-// ******************//
 .pagination {
     display: flex;
     width: 100%;
@@ -282,8 +402,6 @@ p{
     border-radius: 10%;
     border: 1px solid #9FA4A4;
     background-color: white;
-    /* width: 15px;
-    height: 19px; */
     text-align: center;
   }
   .paginationButtonPrevious:hover,
@@ -298,7 +416,6 @@ p{
   .sbox{
     width:66%;
     height:4.5vh;
-    // padding-left: 1%;
     outline: none;
     font-size: 1.2vw;
     border: .1vw solid grey;
@@ -314,30 +431,7 @@ p{
 
     right: -13.5%;
   }
-  .sbtn1{
-    width:6%;
-    height:5vh;
-    cursor: pointer;
-    @media (max-width:415px){
-        width:11.9%;
-        height:3.1vh;
-        right: -42%;
-        top: -14vh;
-        font-size: 2.5vw;
-        border: .1vw solid black;
-    }
-    font-size: .8vw;
-    position: relative;
-    top: -16.7vh;
-    right: -59.4%;
-    color: white;
-    background-color: black;
-  }
-//   .sbtn1:hover{
-//     color:red;
-//   }
   .cardText{
-    // border: .1vw solid green;
     display:flex;
     flex-direction: row;
     align-items: center;
@@ -348,7 +442,6 @@ p{
   .category{
     padding: 0 4% 2% 4%;
     margin: 0 0 0 0;
-    // border: .1vw solid red;
     font-weight: 600;
     color: #668A43;
   }
@@ -362,183 +455,17 @@ p{
     align-items: center;
     gap: 5px;
   }
+  .wishList{
+    position: relative;
+    border: 1px solid #557D2F;
+     border-radius: 60%;
+     bottom:38vh;
+      background-color: white;
+      height:3vh;
+      align-items:center;
+       padding:5px;
+       left:220px;
+       width:1.7vw;
+       cursor:pointer;
+  }
 `;
-
-const ProductPage = (props) => {
-    const [page, setPage] = useState(1);
-    const [tpage, setTpage] =useState(0);
-    const [filters, seFilters] = useState({});
-    const[wishlisted, setWishlisted] = useState(false);
-    const {fetchProductDataList} =useSelector((store)=> store);
-    const {data } = fetchProductDataList;
-
-    const dispatch = useDispatch();
-
-useEffect(()=>{
-    console.log("pageghh", filters, "fgh",page)
-    fetchProductDataRequest({...filters, page: page});
-}, [page])
-
-    const fetchProductDataRequest = (params) => {
-        // setTime(10)
-        // dispatch(getDataLoading());
-        // console.log("params", params)
-        axios.get(`http://localhost:9000/api/product/list`, {params}).then(({data})=>{
-              
-            dispatch(getProductDataSuccess(data.products));
-            setTpage(data.totalPages);
-            console.log("helo",data);
-            // setSdata(data.products)
-        }).catch((error)=>{
-            console.log(error.response)
-        })
-    };
-
-    const handleSortChange = (sortValue) => {
-        console.log("Selected sort:", sortValue);
-        // Dispatch Redux action or update state here
-      };
-
-    console.log("pdata", fetchProductDataList);
-
-    if (data.loading || data.data === undefined) {
-        return (
-            <h1 style={{ marginLeft: "35%", marginTop: "11%", fontSize: "2vw" }}>Loading...</h1>
-        )
-    } else {
-        return (
-            <Stylediv>
-                
-                 <div id="topn1">
-          <div id="topn12">
-            <p>Online Products</p>
-            <p>Become a Seller</p>
-          </div>
-          <div id="topn13">
-            
-             <ProductDropdown onSortChange={handleSortChange} />
-          </div>
-        </div>
-
-                <div className="productBox">
-                 <div className="leftsort">
-                    <div>
-      <select name="" className="sortbyprice">
-        <option value="">Sort by price</option>
-        <option value="low">Low to high</option>
-        <option value="high">High to low</option>
-      </select>
-      </div>
-      <div>
-      <select name="" className="sortbyprice">
-        <option value="">Alphabetical order</option>
-        <option value="ascending">A to Z</option>
-        <option value="descending">Z to A</option>
-      </select>
-      </div>
-      <div>
-      <select name="" className="sortbyprice" >
-        <option value="">Filter by price</option>
-        <option value="0to500">0 to Rs.500</option>
-        <option value="500to1000">Rs.500 to Rs.1000</option>
-        <option value="1000to1500">Rs.1000 to Rs.1500</option>
-        <option value="1500to2000">Rs.1500 to Rs.2000</option>
-      </select>
-      </div>
-      </div>
-        <div className="box1">
-            {/**code for mapping the data to show on browser**/}
-     {data.data.length&&data?.data.map((item)=>{
-         return (
-             <div key={item._id} className="card">
-             <img className="img1" srcSet={item.image} alt="" />
-             <div style={{position: "relative", border: "1px solid #557D2F", borderRadius: "60%", bottom:"38vh", backgroundColor:"white", height:"3vh", alignItems:"center", padding:"5px", left:"220px", width:"1.7vw", cursor:"pointer"}}>
-             <FavoriteRoundedIcon style={{position: "relative", color:`${wishlisted? "red": "#557D2F"}`}} />
-             </div>
-             <div className="cardText">
-             <p>{item.title}</p>
-             <div className="rating">
-             <StarRateIcon style={{ color: 'gold', fontSize: "18px" }} />
-                <p>{item.rating}</p>
-             </div>
-                                
-                                <p className="usPrice">{item.price} USD</p>
-             </div>
-                               
-                                <p className="category">{item.category}</p>
-            {/* <div id="btndiv1"> */}
-            <button className="btn1" onClick={()=>{
-                
-                var result = window.confirm("Are you sure, want to add it to cart?");
-                // if (result) {
-                // Handleitem(item._id);
-                // }
-                }}>Add To Cart
-                <LocalMallIcon style={{ fontSize: "15px" }} />
-                </button>
-            {/* </div> */}
-             </div>
-         )
-     })}
-
-        </div>
-        </div>
-        <br />
-
-        <div className="pagination">
-        <div className="paginationButtonPrevious" style={{color:(page===1)?'#DEE1E1':""}} onClick={()=>{
-          if(page>1)
-          setPage(page-1);
-        
-        }}>
-            <KeyboardBackspaceIcon />
-        </div>
-        <div className="pageNumber" style={{color:(page===1)?'white':"",backgroundColor:(page===1)?'#557D2F':""}} onClick={()=>{
-          setPage(1)
-        }}>1</div>
-        <div className="pageNumber" style={{color:(page===2)?'white':"",backgroundColor:(page===2)?'#557D2F':""}} onClick={()=>{
-          
-          setPage(2);
-        
-        }}>2</div>
-        <div className="pageNumber" style={{color:(page===3)?'white':"",backgroundColor:(page===3)?'#557D2F':""}} onClick={()=>{
-          setPage(3);
-        
-        }}>3</div>
-        <div className="pageNumber" style={{color:(page===4)?'white':"",backgroundColor:(page===4)?'#557D2F':""}} onClick={()=>{
-          setPage(4);
-        
-        }}>4</div>
-        <div className="pageNumber" style={{color:(page===5)?'white':"",backgroundColor:(page===5)?'#557D2F':""}} onClick={()=>{
-          setPage(5);
-        
-        }}>5</div>
-        <div className="pageNumber" style={{color:(page===6)?'white':"",backgroundColor:(page===6)?'#557D2F':""}} onClick={()=>{
-          setPage(6);
-        
-        }}>6</div>
-        <div className="pageNumber" style={{color:(page===7)?'white':"",backgroundColor:(page===7)?'#557D2F':""}} onClick={()=>{
-          setPage(7);
-        
-        }}>7</div>
-        <div className="pageNumber" style={{color:(page===8)?'white':"",backgroundColor:(page===8)?'#557D2F':""}} onClick={()=>{
-          setPage(8);
-        
-        }}>8</div>
-   
-        <div className="paginationButtonNext" style={{color:(page===tpage)?'#DEE1E1':""}} onClick={()=>{
-          
-          setPage(page+1);
-        
-        }}>
-            <EastIcon />
-        </div>
-      </div>
-      <br />
-      <br />
-            </Stylediv>
-        )
-    }
-}
-
-export default ProductPage;

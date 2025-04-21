@@ -7,8 +7,9 @@ import {
   FormControl,
 } from '@mui/material';
 
+// dropdown ui
 export const ProductDropdown = ({ onSortChange }) => {
-  const [sort, setSort] = useState('');
+  const [sort, setSort] = useState('latest');
 
   const handleChange = (e) => {
     setSort(e.target.value);
@@ -28,7 +29,7 @@ export const ProductDropdown = ({ onSortChange }) => {
         Sort By:
       </Typography>
 
-      <FormControl size="small" sx={{ minWidth: 150, border:'none', }}>
+      <FormControl size="small" sx={{ minWidth: 150, border: 'none' }}>
         <Select
           value={sort}
           onChange={handleChange}
@@ -49,16 +50,13 @@ export const ProductDropdown = ({ onSortChange }) => {
               border: 'none',
             },
             '& .MuiSelect-select': {
-              padding: '6px 12px 6px 0px',
+              padding: '6px 12px 6px 1px',
             },
           }}
         >
-          <MenuItem value="" disabled>
-            Select...
-          </MenuItem>
           <MenuItem value="latest">Latest</MenuItem>
-          <MenuItem value="price-asc">Price: Low to High</MenuItem>
-          <MenuItem value="price-desc">Price: High to Low</MenuItem>
+          <MenuItem value="price_asc">Price: Low to High</MenuItem>
+          <MenuItem value="price_desc">Price: High to Low</MenuItem>
         </Select>
       </FormControl>
     </Box>
