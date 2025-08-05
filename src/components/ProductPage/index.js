@@ -340,7 +340,7 @@ p{
 }
 .img1{
     width: 100%;
-    height: 82%;
+    height: 40vh;
     @media (max-width:415px){
         height: 80%;
     }
